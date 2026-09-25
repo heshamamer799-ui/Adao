@@ -266,8 +266,8 @@ let pages = [
   {layout:'cover', eyebrow:'كتيّب المنتج', title:'اسم المنتج الرقمي', body:'وصف قصير وجذاب يوضح قيمة المنتج للعميل في جملة واحدة.'},
   {layout:'text', eyebrow:'المقدمة', title:'ليه المنتج ده؟', body:'اشرح هنا المشكلة اللي المنتج بيحلّها، ولمين موجّه بالظبط.'},
   {layout:'list', eyebrow:'المميزات', title:'إيه اللي هتحصل عليه', body:'الميزة الأولى\nالميزة الثانية\nالميزة الثالثة'},
-  {layout:'cta', eyebrow:'الخطوة الجاية', title:'جاهز تبدأ؟', body:'رابط الشراء أو التواصل، مع سعر العرض إن وجد.'}
-];
+  {layout:'cta', eyebrow:'الخطوة الجاية', title:'جاهز تبدأ؟', body:'رابط الشراء أو التواصل، مع سعر العرض إن وجد5.'}
+]
 let activeIndex = 0;
 
 function layoutLabel(l){
@@ -408,6 +408,95 @@ function pageInnerHTMLForPrint(p, i){
 }
 
 renderAll();
-</script>
+</script><!-- استدعاء مكتبة تحويل الواجهات إلى PDF جاهز -->
+<script src="https://cloudflare.com"></script>
+  
 </body>
-</html>
+</html>document.addEventListener("DOMContentLoaded", function() {
+    
+    // --- 1. تشغيل ميزة رفع الملفات من الهاتف ---
+    const fileUploader = document.getElementById('booklet-file-uploader');
+    fileUploader.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imageUrl = event.target.result;
+                
+                // تنبيه الأداة بالصورة الجديدة: قم بتغيير 'your_canvas_or_image_id' إلى معرف عنصر الصورة في أداتك الأصلية
+                // أو إذا كانت أداتك تستقبل اللصق، يمكنك تمرير imageUrl مباشرة لمساحة التصميم
+                console.log("تم رفع الصورة بنجاح وجاهزة للتصميم:", imageUrl);
+                
+                // كود افتراضي لربطها بالمعاينة (استبدله بما يناسب أداتك):
+                const previewImg = document.getElementById('your_canvas_or_image_id');
+                if(previewImg) previewImg.src = imageUrl;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // --- 2. وكيل البحث (Search Proxy) لجلب صور وتصاميم مجانية ---
+    const btnSearch = document.getElementById('btn-search-proxy');
+    const searchQuery = document.getElementById('search-proxy-query');
+    const searchResultsDiv = document.getElementById('search-proxy-results');
+
+    btnSearch.addEventListener('click', function() {
+        const query = encodeURIComponent(searchQuery.value.trim());
+        if(!query) return alert("من فضلك اكتب كلمة للبحث!");
+
+        searchResultsDiv.innerHTML = "جاري البحث كوكيل...";
+
+        // استخدام واجهة Unsplash المجانية كوكيل لجلب صور عالية الجودة فوراً للأداة
+        fetch(`https://unsplash.com{query}&client_id=SourceUnsplash`)
+        .then(res => res.json())
+        .then(data => {
+            searchResultsDiv.innerHTML = "";
+            if(data.results && data.results.length > 0) {
+                data.results.forEach(img => {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = img.urls.small;
+                    imgElement.style = "height: 80px; border-radius: 4px; cursor: pointer; border: 2px solid transparent;";
+                    // عند الضغط على الصورة يتم إرسالها فوراً للأداة
+                    imgElement.onclick = function() {
+                        const previewImg = document.getElementById('your_canvas_or_image_id');
+                        if(previewImg) previewImg.src = img.urls.regular;
+                        alert("تم إدراج الصورة المختار في أداة التصميم!");
+                    };
+                    searchResultsDiv.appendChild(imgElement);
+                });
+            } else {
+                searchResultsDiv.innerHTML = "لم نجد نتائج، جرب كلمات بالإنجليزية مثل (patterns, cover).";
+            }
+        })
+        .catch(err => {
+            searchResultsDiv.innerHTML = "فشل وكيل البحث، يرجى التحقق من الاتصال.";
+        });
+    });
+
+    // --- 3. وكيل إنشاء الـ PDF بضغطة زر وبالمواصفات المطلوبة ---
+    const btnPDF = document.getElementById('btn-generate-pdf');
+    btnPDF.addEventListener('click', function() {
+        // اختر العنصر أو الحاوية التي تحتوي على تصميم الكتيب النهائي الخاص بك
+        // استبدل 'your_booklet_container_id' بالـ ID الخاص بـ الحاوية/الورقة في كودك الأصلي
+        const bookletElement = document.getElementById('your_booklet_container_id'); 
+        
+        if(!bookletElement) {
+            return alert("خطأ: لم يتم تحديد حاوية التصميم في الكود بعد.");
+        }
+
+        // إعدادات تصدير ملف الـ PDF ليكون عالي الجودة ومطابق للمقاييس القياسية للكتيبات
+        const options = {
+            margin:       0.5,
+            filename:     'my_custom_booklet.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true }, // scale: 2 يضمن دقة عالية للطباعة
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' } // مقاس الخطابات أو الكتيبات القياسي
+        };
+
+        // تشغيل عملية التوليد والتحميل التلقائي للملف على الهاتف
+        html2pdf().set(options).from(bookletElement).save().then(() => {
+            alert("تم تجهيز وتنزيل كتيب الـ PDF بنجاح!");
+        });
+    });
+});
+
