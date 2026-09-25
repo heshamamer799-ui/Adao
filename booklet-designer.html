@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>طاولة التصميم</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=Cairo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -49,6 +50,7 @@ body{
 .btn:hover{border-color:var(--accent);color:var(--accent);}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#1B140D;}
 .btn.primary:hover{opacity:.9;color:#1B140D;}
+.btn.secondary{background:rgba(226,112,58,0.1);border-color:var(--accent);color:var(--accent);}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;}
 
 /* ---------- LAYOUT ---------- */
@@ -56,19 +58,23 @@ body{
 @media(max-width:980px){.desk{grid-template-columns:1fr;}}
 
 /* ---------- PAGE LIST (index cards on tape) ---------- */
-.pages-panel{background:var(--panel);border:1px solid var(--hair);border-radius:8px;padding:16px;}
+.pages-panel{background:var(--panel);border:1px solid var(--hair);border-radius:8px;padding:16px;max-height:70vh;overflow-y:auto;}
 .pages-panel h3{font-family:'Tajawal',sans-serif;font-size:13px;margin:0 0 12px;color:var(--muted);}
 .page-card{
   position:relative;background:var(--paper);color:var(--ink);
-  border-radius:3px;padding:10px 10px 8px;margin-bottom:16px;cursor:pointer;
+  border-radius:3px;padding:10px 10px 8px;margin-bottom:16px;cursor:move;
   font-family:'IBM Plex Mono',monospace;font-size:10.5px;
   box-shadow:0 6px 14px rgba(0,0,0,0.28);
   transform:rotate(var(--r,0deg));
   border:2px solid transparent;
+  transition:all 0.2s;
+  user-select:none;
 }
 .page-card:nth-child(odd){--r:-1.3deg;}
 .page-card:nth-child(even){--r:1deg;}
 .page-card.active{border-color:var(--accent);}
+.page-card.dragging{opacity:0.5;transform:scale(0.95);}
+.page-card.drag-over{transform:translateX(-8px);}
 .page-card::before{
   content:"";position:absolute;top:-8px;right:20px;width:34px;height:14px;
   background:var(--card-tape);opacity:.85;transform:rotate(-3deg);
@@ -122,6 +128,7 @@ body{
 .page-canvas .pg-body{font-size:12.5px;line-height:1.85;color:#3A3F38;flex:1;overflow:auto;}
 .page-canvas .pg-body ul{margin:0;padding:0 16px 0 0;}
 .page-canvas .pg-body li{margin-bottom:8px;}
+.page-canvas .pg-body img{max-width:100%;height:auto;border-radius:4px;margin:8px 0;}
 .page-canvas .pg-footer{
   font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);
   border-top:1px solid #0000001a;padding-top:8px;margin-top:10px;
@@ -141,11 +148,11 @@ body{
 .zoom-note{font-size:11px;color:var(--muted);margin-top:10px;text-align:center;}
 
 /* ---------- INSPECTOR ---------- */
-.inspector{background:var(--panel);border:1px solid var(--hair);border-radius:8px;padding:16px;}
+.inspector{background:var(--panel);border:1px solid var(--hair);border-radius:8px;padding:16px;max-height:70vh;overflow-y:auto;}
 .inspector h3{font-family:'Tajawal',sans-serif;font-size:13px;margin:0 0 12px;color:var(--muted);}
 .field{margin-bottom:14px;}
 .field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:5px;}
-.field input[type=text], .field textarea, .field select{
+.field input[type=text], .field textarea, .field select, .field input[type=file]{
   width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--hair);
   border-radius:4px;padding:8px 9px;color:var(--paper);font-family:'Cairo',sans-serif;
   font-size:12.5px;resize:vertical;
@@ -167,6 +174,31 @@ body{
 
 .foot-note{text-align:center;font-size:11px;color:var(--muted);opacity:.6;margin-top:34px;font-family:'IBM Plex Mono',monospace;}
 
+/* ---------- MODALS ---------- */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;dir:rtl;}
+.modal.active{display:flex;}
+.modal-content{background:var(--panel);border:1px solid var(--hair);border-radius:8px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;}
+.modal-content h2{margin-top:0;color:var(--paper);}
+.modal-content h3{margin-top:16px;margin-bottom:8px;color:var(--paper);}
+.modal-content .field{margin-bottom:16px;}
+.modal-close{float:left;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+
+/* ---------- SEARCH RESULTS ---------- */
+.search-results{
+  display:grid;grid-template-columns:repeat(auto-fill, minmax(80px, 1fr));
+  gap:8px;margin-top:10px;
+}
+.search-result-item{
+  width:100%;aspect-ratio:1;border-radius:4px;overflow:hidden;cursor:pointer;
+  border:2px solid transparent;transition:0.2s;
+}
+.search-result-item:hover{border-color:var(--accent);transform:scale(1.05);}
+.search-result-item img{width:100%;height:100%;object-fit:cover;}
+
+/* ---------- UNDO/REDO ---------- */
+.history-btn{font-size:12px;}
+.history-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
 /* ---------- PRINT ---------- */
 @media print{
   body *{visibility:hidden;}
@@ -180,6 +212,20 @@ body{
   @page{size:148mm 210mm;margin:0;}
 }
 #printArea{display:none;}
+
+/* ---------- MOBILE RESPONSIVE ---------- */
+@media(max-width:768px){
+  body{padding:12px 8px 40px;}
+  .top{flex-direction:column;align-items:flex-start;}
+  .top h1{font-size:24px;}
+  .desk{grid-template-columns:1fr;}
+  .pages-panel,.inspector{max-height:50vh;}
+  .toolbar{width:100%;}
+  .toolbar .btn{flex:1;font-size:12px;padding:8px 12px;}
+  .page-canvas{width:100%;max-width:300px;}
+  .modal-content{width:95%;}
+}
+
 </style>
 </head>
 <body>
@@ -191,8 +237,12 @@ body{
       <div class="sub">صمّم كتيّب منتجك الرقمي — غلاف، صفحات، ودعوة لاتخاذ إجراء</div>
     </div>
     <div class="toolbar">
+      <button class="btn history-btn" id="undoBtn" onclick="undo()" title="تراجع">↶ تراجع</button>
+      <button class="btn history-btn" id="redoBtn" onclick="redo()" title="إعادة">↷ إعادة</button>
       <button class="btn" onclick="duplicatePage()">تكرار الصفحة</button>
-      <button class="btn primary" onclick="doPrint()">تصدير PDF للطباعة</button>
+      <button class="btn secondary" onclick="openSearchModal()">🔍 ابحث عن تصاميم</button>
+      <button class="btn" onclick="openImportExport()">📥 استيراد/تصدير</button>
+      <button class="btn primary" onclick="exportPDF()">📄 تحميل PDF</button>
     </div>
   </div>
 
@@ -245,6 +295,11 @@ body{
         <textarea id="f-body" oninput="updateField()"></textarea>
       </div>
 
+      <div class="field">
+        <label>رفع صورة للصفحة</label>
+        <input type="file" id="f-image" accept="image/*" onchange="uploadImage()">
+      </div>
+
       <h3 style="margin-top:18px;">لون هوية الكتيّب</h3>
       <div class="theme-row" id="themeRow"></div>
 
@@ -253,22 +308,90 @@ body{
 
   </div>
 
-  <div class="foot-note">اضبط النصوص من هنا، وسيتم توليد نسخة PDF جاهزة للطباعة بنفس ترتيب الصفحات عبر زر التصدير.</div>
+  <div class="foot-note">💾 يتم الحفظ تلقائياً | ↶ استخدم الأزرار للتراجع والإعادة | 📥 احفظ تصميمك بصيغة JSON</div>
+</div>
+
+<!-- MODALS -->
+<div id="searchModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeSearchModal()">✕</button>
+    <h2>ابحث عن تصاميم وصور</h2>
+    <div class="field">
+      <label>اكتب كلمة للبحث (بالإنجليزية)</label>
+      <input type="text" id="searchQuery" placeholder="مثال: coloring pages, patterns...">
+    </div>
+    <button class="btn primary" style="width:100%;" onclick="performSearch()">🔍 بحث</button>
+    <div id="searchResults" class="search-results"></div>
+  </div>
+</div>
+
+<div id="importExportModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeImportExport()">✕</button>
+    <h2>استيراد / تصدير التصميم</h2>
+    
+    <h3>تصدير الكتيّب الحالي</h3>
+    <button class="btn primary" style="width:100%;margin-bottom:12px;" onclick="exportJSON()">📥 حمّل ملف JSON</button>
+    
+    <h3>استيراد من ملف</h3>
+    <input type="file" id="importFile" accept=".json" onchange="importJSON()">
+    
+    <h3>أيضاً: انسخ الكود</h3>
+    <textarea id="jsonExport" style="width:100%;height:150px;margin-top:8px;font-family:monospace;font-size:11px;" readonly></textarea>
+    <button class="btn" style="width:100%;margin-top:8px;" onclick="copyToClipboard()">نسخ للحافظة</button>
+  </div>
 </div>
 
 <div id="printArea"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
 const THEMES = ['#E2703A','#3FA796','#4C6EF5','#B65FCF','#D4A017'];
 let themeColor = THEMES[0];
 
 let pages = [
-  {layout:'cover', eyebrow:'كتيّب المنتج', title:'اسم المنتج الرقمي', body:'وصف قصير وجذاب يوضح قيمة المنتج للعميل في جملة واحدة.'},
-  {layout:'text', eyebrow:'المقدمة', title:'ليه المنتج ده؟', body:'اشرح هنا المشكلة اللي المنتج بيحلّها، ولمين موجّه بالظبط.'},
-  {layout:'list', eyebrow:'المميزات', title:'إيه اللي هتحصل عليه', body:'الميزة الأولى\nالميزة الثانية\nالميزة الثالثة'},
-  {layout:'cta', eyebrow:'الخطوة الجاية', title:'جاهز تبدأ؟', body:'رابط الشراء أو التواصل، مع سعر العرض إن وجد5.'}
-]
+  {layout:'cover', eyebrow:'كتيّب المنتج', title:'اسم المنتج الرقمي', body:'وصف قصير وجذاب يوضح قيمة المنتج للعميل في جملة واحدة.', image:null},
+  {layout:'text', eyebrow:'المقدمة', title:'ليه المنتج ده؟', body:'اشرح هنا المشكلة اللي المنتج بيحلّها، ولمين موجّه بالظبط.', image:null},
+  {layout:'list', eyebrow:'المميزات', title:'إيه اللي هتحصل عليه', body:'الميزة الأولى\nالميزة الثانية\nالميزة الثالثة', image:null},
+  {layout:'cta', eyebrow:'الخطوة الجاية', title:'جاهز تبدأ؟', body:'رابط الشراء أو التواصل، مع سعر العرض إن وجد', image:null}
+];
+
 let activeIndex = 0;
+let history = [];
+let historyIndex = -1;
+
+function saveState(){
+  historyIndex++;
+  if(historyIndex < history.length) history.length = historyIndex;
+  history.push(JSON.parse(JSON.stringify(pages)));
+  if(history.length > 50) history.shift();
+  updateHistoryButtons();
+  saveToLocalStorage();
+}
+
+function undo(){
+  if(historyIndex > 0){
+    historyIndex--;
+    pages = JSON.parse(JSON.stringify(history[historyIndex]));
+    renderAll();
+    updateHistoryButtons();
+  }
+}
+
+function redo(){
+  if(historyIndex < history.length - 1){
+    historyIndex++;
+    pages = JSON.parse(JSON.stringify(history[historyIndex]));
+    renderAll();
+    updateHistoryButtons();
+  }
+}
+
+function updateHistoryButtons(){
+  document.getElementById('undoBtn').disabled = historyIndex <= 0;
+  document.getElementById('redoBtn').disabled = historyIndex >= history.length - 1;
+}
 
 function layoutLabel(l){
   return {cover:'غلاف', text:'نص', list:'نقاط', cta:'دعوة لإجراء'}[l];
@@ -277,11 +400,42 @@ function layoutLabel(l){
 function renderPageList(){
   const list = document.getElementById('pageList');
   list.innerHTML = pages.map((p,i) => `
-    <div class="page-card ${i===activeIndex?'active':''}" onclick="selectPage(${i})">
+    <div class="page-card ${i===activeIndex?'active':''}" draggable="true" data-index="${i}" onclick="selectPage(${i})" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropPage(event)" ondragleave="dragLeave(event)">
       <div class="pnum">${String(i+1).padStart(2,'0')} — ${layoutLabel(p.layout)}</div>
       <div class="ptitle">${p.title || 'بدون عنوان'}</div>
     </div>
   `).join('');
+}
+
+let draggedIndex = null;
+
+function dragStart(e){
+  draggedIndex = parseInt(e.target.closest('.page-card').dataset.index);
+  e.target.closest('.page-card').classList.add('dragging');
+}
+
+function dragOver(e){
+  e.preventDefault();
+  e.target.closest('.page-card')?.classList.add('drag-over');
+}
+
+function dragLeave(e){
+  e.target.closest('.page-card')?.classList.remove('drag-over');
+}
+
+function dropPage(e){
+  e.preventDefault();
+  const dropIndex = parseInt(e.target.closest('.page-card').dataset.index);
+  document.querySelectorAll('.page-card').forEach(c => c.classList.remove('dragging', 'drag-over'));
+  
+  if(draggedIndex !== null && draggedIndex !== dropIndex){
+    const draggedPage = pages.splice(draggedIndex, 1)[0];
+    pages.splice(dropIndex, 0, draggedPage);
+    activeIndex = dropIndex;
+    saveState();
+    renderAll();
+  }
+  draggedIndex = null;
 }
 
 function selectPage(i){
@@ -290,27 +444,31 @@ function selectPage(i){
 }
 
 function addPage(){
-  pages.push({layout:'text', eyebrow:'صفحة جديدة', title:'عنوان الصفحة', body:'اكتب المحتوى هنا...'});
-  activeIndex = pages.length-1;
+  pages.push({layout:'text', eyebrow:'صفحة جديدة', title:'عنوان الصفحة', body:'اكتب المحتوى هنا...', image:null});
+  activeIndex = pages.length - 1;
+  saveState();
   renderAll();
 }
 
 function duplicatePage(){
-  const copy = {...pages[activeIndex]};
-  pages.splice(activeIndex+1, 0, copy);
-  activeIndex = activeIndex+1;
+  const copy = JSON.parse(JSON.stringify(pages[activeIndex]));
+  pages.splice(activeIndex + 1, 0, copy);
+  activeIndex = activeIndex + 1;
+  saveState();
   renderAll();
 }
 
 function deletePage(){
   if(pages.length <= 1) return;
-  pages.splice(activeIndex,1);
-  activeIndex = Math.max(0, activeIndex-1);
+  pages.splice(activeIndex, 1);
+  activeIndex = Math.max(0, activeIndex - 1);
+  saveState();
   renderAll();
 }
 
 function setLayout(l){
   pages[activeIndex].layout = l;
+  saveState();
   renderAll();
 }
 
@@ -319,13 +477,28 @@ function updateField(){
   p.eyebrow = document.getElementById('f-eyebrow').value;
   p.title = document.getElementById('f-title').value;
   p.body = document.getElementById('f-body').value;
+  saveState();
   renderPageList();
   renderCanvas();
 }
 
+function uploadImage(){
+  const file = document.getElementById('f-image').files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      pages[activeIndex].image = e.target.result;
+      saveState();
+      renderCanvas();
+      document.getElementById('f-image').value = '';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
 function renderInspector(){
   const p = pages[activeIndex];
-  document.querySelectorAll('#layoutPicker button').forEach(b=>{
+  document.querySelectorAll('#layoutPicker button').forEach(b => {
     b.classList.toggle('active', b.dataset.l === p.layout);
   });
   document.getElementById('f-eyebrow').value = p.eyebrow || '';
@@ -339,15 +512,19 @@ function pageInnerHTML(p){
     ? `<ul>${(p.body||'').split('\n').filter(x=>x.trim()).map(x=>`<li>${escapeHTML(x)}</li>`).join('')}</ul>`
     : `<p>${escapeHTML(p.body||'').replace(/\n/g,'<br>')}</p>`;
 
+  const imageHTML = p.image ? `<img src="${p.image}" alt="صورة الصفحة" style="max-width:100%;height:auto;border-radius:4px;margin:8px 0;">` : '';
+
   if(p.layout === 'cover'){
     return `
       <div class="pg-eyebrow">${escapeHTML(p.eyebrow||'')}</div>
       <h2>${escapeHTML(p.title||'')}</h2>
+      ${imageHTML}
       <div class="pg-tagline">${escapeHTML(p.body||'')}</div>`;
   }
   return `
     <div class="pg-eyebrow">${escapeHTML(p.eyebrow||'')}</div>
     <h2>${escapeHTML(p.title||'')}</h2>
+    ${imageHTML}
     <div class="pg-body">${bodyHTML}</div>
     <div class="pg-footer"><span>${layoutLabel(p.layout)}</span><span>صفحة ${activeIndex+1}</span></div>`;
 }
@@ -370,7 +547,12 @@ function renderThemeRow(){
     <div class="swatch ${c===themeColor?'active':''}" style="background:${c}" onclick="setTheme('${c}')"></div>
   `).join('');
 }
-function setTheme(c){ themeColor = c; renderAll(); }
+
+function setTheme(c){
+  themeColor = c;
+  saveState();
+  renderAll();
+}
 
 function renderAll(){
   renderPageList();
@@ -379,14 +561,136 @@ function renderAll(){
   renderThemeRow();
 }
 
-function doPrint(){
+// SEARCH FUNCTIONALITY
+function openSearchModal(){
+  document.getElementById('searchModal').classList.add('active');
+  document.getElementById('searchQuery').focus();
+}
+
+function closeSearchModal(){
+  document.getElementById('searchModal').classList.remove('active');
+}
+
+function performSearch(){
+  const query = encodeURIComponent(document.getElementById('searchQuery').value.trim());
+  if(!query) return alert('من فضلك اكتب كلمة للبحث!');
+  
+  const resultsDiv = document.getElementById('searchResults');
+  resultsDiv.innerHTML = '<p style="text-align:center;color:var(--muted);">جاري البحث...</p>';
+
+  fetch(`https://api.unsplash.com/search/photos?query=${query}&per_page=12&client_id=cM4lz-pHk_dMZK_EGVcm5v_pzHFSr5xVxMdlpkUKmfY`)
+    .then(r => r.json())
+    .then(data => {
+      resultsDiv.innerHTML = '';
+      if(data.results && data.results.length > 0){
+        data.results.forEach(img => {
+          const item = document.createElement('div');
+          item.className = 'search-result-item';
+          item.innerHTML = `<img src="${img.urls.small}" alt="${img.alt_description || 'صورة'}">`;
+          item.onclick = () => {
+            pages[activeIndex].image = img.urls.regular;
+            saveState();
+            renderCanvas();
+            closeSearchModal();
+          };
+          resultsDiv.appendChild(item);
+        });
+      } else {
+        resultsDiv.innerHTML = '<p style="text-align:center;color:var(--muted);">لم نجد نتائج</p>';
+      }
+    })
+    .catch(e => {
+      resultsDiv.innerHTML = '<p style="text-align:center;color:#D97757;">خطأ في الاتصال</p>';
+    });
+}
+
+document.addEventListener('keypress', (e) => {
+  if(e.key === 'Enter' && document.getElementById('searchModal').classList.contains('active')){
+    performSearch();
+  }
+});
+
+// IMPORT/EXPORT
+function openImportExport(){
+  updateJSONDisplay();
+  document.getElementById('importExportModal').classList.add('active');
+}
+
+function closeImportExport(){
+  document.getElementById('importExportModal').classList.remove('active');
+}
+
+function updateJSONDisplay(){
+  const data = {pages, themeColor};
+  document.getElementById('jsonExport').value = JSON.stringify(data, null, 2);
+}
+
+function exportJSON(){
+  const data = {pages, themeColor};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `booklet-${new Date().getTime()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(){
+  const file = document.getElementById('importFile').files[0];
+  if(!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const data = JSON.parse(e.target.result);
+      if(data.pages && Array.isArray(data.pages)){
+        pages = data.pages;
+        themeColor = data.themeColor || THEMES[0];
+        activeIndex = 0;
+        history = [JSON.parse(JSON.stringify(pages))];
+        historyIndex = 0;
+        updateHistoryButtons();
+        saveToLocalStorage();
+        renderAll();
+        closeImportExport();
+        alert('تم استيراد التصميم بنجاح!');
+      }
+    } catch(err) {
+      alert('خطأ في الملف: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  document.getElementById('importFile').value = '';
+}
+
+function copyToClipboard(){
+  const text = document.getElementById('jsonExport').value;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('تم النسخ للحافظة!');
+  });
+}
+
+// PDF EXPORT
+function exportPDF(){
   const area = document.getElementById('printArea');
-  area.innerHTML = pages.map((p,i) => `
-    <div class="print-page" style="${p.layout==='cover' ? `background:${themeColor};color:#fff;justify-content:center;align-items:center;text-align:center;` : p.layout==='cta' ? 'background:#20241F;color:#FBF8F1;' : 'background:#fff;color:#20241F;'}">
+  area.innerHTML = pages.map((p, i) => `
+    <div class="print-page" style="${p.layout==='cover' ? `background:${themeColor};color:#fff;justify-content:center;align-items:center;text-align:center;` : p.layout==='cta' ? 'background:#20241F;color:#FBF8F1;' : ''}" dir="rtl">
       ${pageInnerHTMLForPrint(p, i)}
     </div>
   `).join('');
-  setTimeout(()=>window.print(), 80);
+
+  const options = {
+    margin: [5, 5, 5, 5],
+    filename: `booklet-${new Date().toISOString().split('T')[0]}.pdf`,
+    image: {type: 'jpeg', quality: 0.98},
+    html2canvas: {scale: 2, useCORS: true},
+    jsPDF: {unit: 'mm', format: [148, 210], orientation: 'portrait'}
+  };
+
+  html2pdf().set(options).from(area).save().then(() => {
+    area.innerHTML = '';
+  });
 }
 
 function pageInnerHTMLForPrint(p, i){
@@ -394,109 +698,68 @@ function pageInnerHTMLForPrint(p, i){
   const bodyHTML = p.layout === 'list'
     ? `<ul style="padding-right:16px;line-height:1.9;">${(p.body||'').split('\n').filter(x=>x.trim()).map(x=>`<li>${escapeHTML(x)}</li>`).join('')}</ul>`
     : `<p style="line-height:1.9;">${escapeHTML(p.body||'').replace(/\n/g,'<br>')}</p>`;
+  
+  const imageHTML = p.image ? `<img src="${p.image}" alt="صورة" style="max-width:100%;height:auto;border-radius:4px;margin:8px 0;">` : '';
+
   if(p.layout==='cover'){
     return `<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;color:${eyebrowColor};text-transform:uppercase;margin-bottom:10px;">${escapeHTML(p.eyebrow||'')}</div>
       <h2 style="font-family:'Tajawal',sans-serif;font-weight:900;font-size:28px;margin:0 0 10px;">${escapeHTML(p.title||'')}</h2>
+      ${imageHTML}
       <div style="font-size:13px;opacity:.9;">${escapeHTML(p.body||'')}</div>`;
   }
   return `<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;color:${eyebrowColor};text-transform:uppercase;margin-bottom:10px;">${escapeHTML(p.eyebrow||'')}</div>
     <h2 style="font-family:'Tajawal',sans-serif;font-weight:900;font-size:24px;margin:0 0 14px;">${escapeHTML(p.title||'')}</h2>
+    ${imageHTML}
     <div style="font-size:13px;flex:1;">${bodyHTML}</div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:.55;border-top:1px solid #0002;padding-top:8px;margin-top:12px;display:flex;justify-content:space-between;">
       <span>${layoutLabel(p.layout)}</span><span>صفحة ${i+1}</span>
     </div>`;
 }
 
-renderAll();
-</script><!-- استدعاء مكتبة تحويل الواجهات إلى PDF جاهز -->
-<script src="https://cloudflare.com"></script>
-  
-</body>
-</html>document.addEventListener("DOMContentLoaded", function() {
-    
-    // --- 1. تشغيل ميزة رفع الملفات من الهاتف ---
-    const fileUploader = document.getElementById('booklet-file-uploader');
-    fileUploader.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const imageUrl = event.target.result;
-                
-                // تنبيه الأداة بالصورة الجديدة: قم بتغيير 'your_canvas_or_image_id' إلى معرف عنصر الصورة في أداتك الأصلية
-                // أو إذا كانت أداتك تستقبل اللصق، يمكنك تمرير imageUrl مباشرة لمساحة التصميم
-                console.log("تم رفع الصورة بنجاح وجاهزة للتصميم:", imageUrl);
-                
-                // كود افتراضي لربطها بالمعاينة (استبدله بما يناسب أداتك):
-                const previewImg = document.getElementById('your_canvas_or_image_id');
-                if(previewImg) previewImg.src = imageUrl;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+// LOCAL STORAGE
+function saveToLocalStorage(){
+  const data = {pages, themeColor};
+  localStorage.setItem('bookletDesigner', JSON.stringify(data));
+}
 
-    // --- 2. وكيل البحث (Search Proxy) لجلب صور وتصاميم مجانية ---
-    const btnSearch = document.getElementById('btn-search-proxy');
-    const searchQuery = document.getElementById('search-proxy-query');
-    const searchResultsDiv = document.getElementById('search-proxy-results');
+function loadFromLocalStorage(){
+  const data = localStorage.getItem('bookletDesigner');
+  if(data){
+    try {
+      const parsed = JSON.parse(data);
+      pages = parsed.pages;
+      themeColor = parsed.themeColor;
+    } catch(e) {
+      console.log('خطأ في تحميل البيانات المحفوظة');
+    }
+  }
+  history = [JSON.parse(JSON.stringify(pages))];
+  historyIndex = 0;
+  updateHistoryButtons();
+  renderAll();
+}
 
-    btnSearch.addEventListener('click', function() {
-        const query = encodeURIComponent(searchQuery.value.trim());
-        if(!query) return alert("من فضلك اكتب كلمة للبحث!");
+// INIT
+loadFromLocalStorage();
 
-        searchResultsDiv.innerHTML = "جاري البحث كوكيل...";
-
-        // استخدام واجهة Unsplash المجانية كوكيل لجلب صور عالية الجودة فوراً للأداة
-        fetch(`https://unsplash.com{query}&client_id=SourceUnsplash`)
-        .then(res => res.json())
-        .then(data => {
-            searchResultsDiv.innerHTML = "";
-            if(data.results && data.results.length > 0) {
-                data.results.forEach(img => {
-                    const imgElement = document.createElement('img');
-                    imgElement.src = img.urls.small;
-                    imgElement.style = "height: 80px; border-radius: 4px; cursor: pointer; border: 2px solid transparent;";
-                    // عند الضغط على الصورة يتم إرسالها فوراً للأداة
-                    imgElement.onclick = function() {
-                        const previewImg = document.getElementById('your_canvas_or_image_id');
-                        if(previewImg) previewImg.src = img.urls.regular;
-                        alert("تم إدراج الصورة المختار في أداة التصميم!");
-                    };
-                    searchResultsDiv.appendChild(imgElement);
-                });
-            } else {
-                searchResultsDiv.innerHTML = "لم نجد نتائج، جرب كلمات بالإنجليزية مثل (patterns, cover).";
-            }
-        })
-        .catch(err => {
-            searchResultsDiv.innerHTML = "فشل وكيل البحث، يرجى التحقق من الاتصال.";
-        });
-    });
-
-    // --- 3. وكيل إنشاء الـ PDF بضغطة زر وبالمواصفات المطلوبة ---
-    const btnPDF = document.getElementById('btn-generate-pdf');
-    btnPDF.addEventListener('click', function() {
-        // اختر العنصر أو الحاوية التي تحتوي على تصميم الكتيب النهائي الخاص بك
-        // استبدل 'your_booklet_container_id' بالـ ID الخاص بـ الحاوية/الورقة في كودك الأصلي
-        const bookletElement = document.getElementById('your_booklet_container_id'); 
-        
-        if(!bookletElement) {
-            return alert("خطأ: لم يتم تحديد حاوية التصميم في الكود بعد.");
-        }
-
-        // إعدادات تصدير ملف الـ PDF ليكون عالي الجودة ومطابق للمقاييس القياسية للكتيبات
-        const options = {
-            margin:       0.5,
-            filename:     'my_custom_booklet.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true }, // scale: 2 يضمن دقة عالية للطباعة
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' } // مقاس الخطابات أو الكتيبات القياسي
-        };
-
-        // تشغيل عملية التوليد والتحميل التلقائي للملف على الهاتف
-        html2pdf().set(options).from(bookletElement).save().then(() => {
-            alert("تم تجهيز وتنزيل كتيب الـ PDF بنجاح!");
-        });
-    });
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if(e.ctrlKey || e.metaKey){
+    if(e.key === 'z') {e.preventDefault(); undo();}
+    if(e.key === 'y') {e.preventDefault(); redo();}
+    if(e.key === 's') {e.preventDefault(); saveToLocalStorage(); alert('تم حفظ التصميم!');}
+  }
 });
 
+// Close modals on escape
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    closeSearchModal();
+    closeImportExport();
+  }
+});
+
+</script>
+
+</body>
+</html>
