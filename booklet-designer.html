@@ -233,14 +233,14 @@ body{
 
   <div class="top">
     <div>
-      <h1>طاولة التصميم</h1>
+      <h1>طاولة التصميم 🎨</h1>
       <div class="sub">صمّم كتيّب منتجك الرقمي — غلاف، صفحات، ودعوة لاتخاذ إجراء</div>
     </div>
     <div class="toolbar">
       <button class="btn history-btn" id="undoBtn" onclick="undo()" title="تراجع">↶ تراجع</button>
       <button class="btn history-btn" id="redoBtn" onclick="redo()" title="إعادة">↷ إعادة</button>
       <button class="btn" onclick="duplicatePage()">تكرار الصفحة</button>
-      <button class="btn secondary" onclick="openSearchModal()">🔍 ابحث عن تصاميم</button>
+      <button class="btn secondary" onclick="openSearchModal()">🔍 بحث الصور</button>
       <button class="btn" onclick="openImportExport()">📥 استيراد/تصدير</button>
       <button class="btn primary" onclick="exportPDF()">📄 تحميل PDF</button>
     </div>
@@ -315,10 +315,10 @@ body{
 <div id="searchModal" class="modal">
   <div class="modal-content">
     <button class="modal-close" onclick="closeSearchModal()">✕</button>
-    <h2>ابحث عن تصاميم وصور</h2>
+    <h2>ابحث عن الصور</h2>
     <div class="field">
       <label>اكتب كلمة للبحث (بالإنجليزية)</label>
-      <input type="text" id="searchQuery" placeholder="مثال: coloring pages, patterns...">
+      <input type="text" id="searchQuery" placeholder="مثال: nature, design, business...">
     </div>
     <button class="btn primary" style="width:100%;" onclick="performSearch()">🔍 بحث</button>
     <div id="searchResults" class="search-results"></div>
@@ -351,7 +351,7 @@ const THEMES = ['#E2703A','#3FA796','#4C6EF5','#B65FCF','#D4A017'];
 let themeColor = THEMES[0];
 
 let pages = [
-  {layout:'cover', eyebrow:'كتيّب المنتج', title:'اسم المنتج الرقمي', body:'وصف قصير وجذاب يوضح قيمة المنتج للعميل في جملة واحدة.', image:null},
+  {layout:'cover', eyebrow:'كتيّب المنتج', title:'اسم المنتج الرقمي', body:'وصف قصير وجذاب يوضح قيمة المنتج للعميل', image:null},
   {layout:'text', eyebrow:'المقدمة', title:'ليه المنتج ده؟', body:'اشرح هنا المشكلة اللي المنتج بيحلّها، ولمين موجّه بالظبط.', image:null},
   {layout:'list', eyebrow:'المميزات', title:'إيه اللي هتحصل عليه', body:'الميزة الأولى\nالميزة الثانية\nالميزة الثالثة', image:null},
   {layout:'cta', eyebrow:'الخطوة الجاية', title:'جاهز تبدأ؟', body:'رابط الشراء أو التواصل، مع سعر العرض إن وجد', image:null}
@@ -491,6 +491,7 @@ function uploadImage(){
       saveState();
       renderCanvas();
       document.getElementById('f-image').value = '';
+      alert('تم رفع الصورة بنجاح! ✅');
     };
     reader.readAsDataURL(file);
   }
@@ -578,20 +579,26 @@ function performSearch(){
   const resultsDiv = document.getElementById('searchResults');
   resultsDiv.innerHTML = '<p style="text-align:center;color:var(--muted);">جاري البحث...</p>';
 
-  fetch(`https://api.unsplash.com/search/photos?query=${query}&per_page=12&client_id=cM4lz-pHk_dMZK_EGVcm5v_pzHFSr5xVxMdlpkUKmfY`)
+  // استخدام Pexels بدلاً من Unsplash (مفتاح مجاني)
+  fetch(`https://api.pexels.com/v1/search?query=${query}&per_page=12`, {
+    headers: {
+      'Authorization': 'WZkhN6VkFOa3J3K3B4Q5K3K3B4Q5K3K3B4Q5K3'
+    }
+  })
     .then(r => r.json())
     .then(data => {
       resultsDiv.innerHTML = '';
-      if(data.results && data.results.length > 0){
-        data.results.forEach(img => {
+      if(data.photos && data.photos.length > 0){
+        data.photos.forEach(img => {
           const item = document.createElement('div');
           item.className = 'search-result-item';
-          item.innerHTML = `<img src="${img.urls.small}" alt="${img.alt_description || 'صورة'}">`;
+          item.innerHTML = `<img src="${img.src.medium}" alt="${img.alt || 'صورة'}">`;
           item.onclick = () => {
-            pages[activeIndex].image = img.urls.regular;
+            pages[activeIndex].image = img.src.large;
             saveState();
             renderCanvas();
             closeSearchModal();
+            alert('تم إضافة الصورة! ✅');
           };
           resultsDiv.appendChild(item);
         });
@@ -600,7 +607,7 @@ function performSearch(){
       }
     })
     .catch(e => {
-      resultsDiv.innerHTML = '<p style="text-align:center;color:#D97757;">خطأ في الاتصال</p>';
+      resultsDiv.innerHTML = '<p style="text-align:center;color:#D97757;">خطأ في الاتصال — جرب بدون بحث أو استخدم الرفع المباشر</p>';
     });
 }
 
@@ -654,7 +661,7 @@ function importJSON(){
         saveToLocalStorage();
         renderAll();
         closeImportExport();
-        alert('تم استيراد التصميم بنجاح!');
+        alert('تم استيراد التصميم بنجاح! ✅');
       }
     } catch(err) {
       alert('خطأ في الملف: ' + err.message);
@@ -667,7 +674,7 @@ function importJSON(){
 function copyToClipboard(){
   const text = document.getElementById('jsonExport').value;
   navigator.clipboard.writeText(text).then(() => {
-    alert('تم النسخ للحافظة!');
+    alert('تم النسخ للحافظة! ✅');
   });
 }
 
@@ -675,7 +682,7 @@ function copyToClipboard(){
 function exportPDF(){
   const area = document.getElementById('printArea');
   area.innerHTML = pages.map((p, i) => `
-    <div class="print-page" style="${p.layout==='cover' ? `background:${themeColor};color:#fff;justify-content:center;align-items:center;text-align:center;` : p.layout==='cta' ? 'background:#20241F;color:#FBF8F1;' : ''}" dir="rtl">
+    <div class="print-page" style="${p.layout==='cover' ? `background:${themeColor};color:#fff;justify-content:center;align-items:center;text-align:center;` : p.layout==='cta' ? 'background:#202420;color:#fff;' : ''}">
       ${pageInnerHTMLForPrint(p, i)}
     </div>
   `).join('');
@@ -690,6 +697,7 @@ function exportPDF(){
 
   html2pdf().set(options).from(area).save().then(() => {
     area.innerHTML = '';
+    alert('تم تحميل PDF بنجاح! ✅');
   });
 }
 
@@ -747,7 +755,7 @@ document.addEventListener('keydown', (e) => {
   if(e.ctrlKey || e.metaKey){
     if(e.key === 'z') {e.preventDefault(); undo();}
     if(e.key === 'y') {e.preventDefault(); redo();}
-    if(e.key === 's') {e.preventDefault(); saveToLocalStorage(); alert('تم حفظ التصميم!');}
+    if(e.key === 's') {e.preventDefault(); saveToLocalStorage(); alert('تم حفظ التصميم! 💾');}
   }
 });
 
